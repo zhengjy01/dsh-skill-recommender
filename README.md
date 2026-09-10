@@ -55,3 +55,16 @@ node tests/smoke.mjs
 ## License
 
 MIT
+
+## 安装 / Install
+
+```sh
+# from npm (published package)
+dsh plugin --profile web add dsh-skill-recommender
+
+# or local development
+dsh plugin --profile web add link:/path/to/dsh-skill-recommender
+
+# then restart dsh web to activate
+```
+
