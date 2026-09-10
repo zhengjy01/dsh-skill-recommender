@@ -27,6 +27,10 @@ A **skill recommender** for [DeepSeek Harness](https://github.com/deepseek-ai/ds
 
 A **Skill 推荐器** card in the Web settings page: scan button, live **匹配指数 slider** (0–100), four **per-dimension weight sliders** (topic / tool / task / proximity), catalog toggles, and recommendation cards with scores, per-dimension breakdowns and a GitHub link. The index + weights are saved to `~/.dsh/dsh-skill-recommender/config.json` (mode `0600`).
 
+## Compatibility
+
+Requires **DeepSeek Harness ≥ 0.1.5-rc.1** (declared as `dsh.engines.dsh` in the package manifest, so the DSH plugin marketplace can report it) and is verified against **0.1.5-rc.1**. This build carries the DSH 0.1.5 adaptations: the strict tool-result contract (lossless-JSON snapshot, `additionalProperties: false` schema validation, and `output.render` returning `ContentBlock[]`) plus executable resolution that survives a launchd-started host whose `PATH` is only `/usr/bin:/bin`.
+
 ## Install (development)
 
 ```bash
