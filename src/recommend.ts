@@ -282,8 +282,29 @@ function truncate(s, n) {
 	return s.length > n ? s.slice(0, n) : s;
 }
 
+// --- Readers ---------------------------------------------------------------
+
+/** A blank record; readers fill it as they walk one session log. */
+function emptyRecord(source: SessionRecord["source"]): SessionRecord {
+	return { source, id: "", ts: 0, cwd: "", model: "", userMsgs: [], assistantMsgs: [], toolNames: [] };
+}
+
+/** Progress sink: fetchCatalog emits a string, loadRegistry an {pct,message}. */
+type ProgressFn = (p: any) => void;
+
+interface FetchOptions {
+	force?: boolean;
+	onProgress?: ProgressFn;
+}
+
+interface LoadRegistryOptions {
+	localSkills?: any[];
+	forceRefresh?: boolean;
+	onProgress?: ProgressFn;
+}
+
 // --- DSH -------------------------------------------------------------------
-async function readDsh(file) {
+async function readDsh(file: string): Promise<SessionRecord> {
 	// Absolute zstd + widened PATH: a launchd-started DSH has only
 	// /usr/bin:/bin, where zstd is absent — every session would be skipped
 	// silently by the per-file catch below.
@@ -291,7 +312,7 @@ async function readDsh(file) {
 		maxBuffer: 512 * 1024 * 1024,
 		env: childEnv(),
 	});
-	const rec = { source: "dsh" };
+	const rec = emptyRecord("dsh");
 	const userMsgs = [];
 	const assistantMsgs = [];
 	const toolNames = [];
@@ -336,7 +357,7 @@ async function readDsh(file) {
 // --- Codex -----------------------------------------------------------------
 async function readCodex(file) {
 	const text = await readFile(file, "utf8");
-	const rec = { source: "codex" };
+	const rec = emptyRecord("codex");
 	const userMsgs = [];
 	const assistantMsgs = [];
 	const toolNames = [];
@@ -383,7 +404,7 @@ async function readCodex(file) {
 // --- Claude ----------------------------------------------------------------
 async function readClaude(file) {
 	const text = await readFile(file, "utf8");
-	const rec = { source: "claude" };
+	const rec = emptyRecord("claude");
 	const userMsgs = [];
 	const assistantMsgs = [];
 	const toolNames = [];
@@ -552,7 +573,7 @@ export async function scanSessions(cfg) {
 
 // A compact domain tagger — keyword -> tag. Extensible; the LLM (optional)
 // refines this with free-text understanding.
-const TOPIC_KEYWORDS = [
+const TOPIC_KEYWORDS: Array<[string, string[]]> = [
 	["blog", ["博客", "hexo", "notionnext", "文章", "post", "slug", "notion"]],
 	["docs", ["文档", "docx", "pdf", "markdown", "知识库", "obsidian", "vault", "笔记"]],
 	["dsh-plugin", ["dsh", "插件", "cordis", "tsdown", "bundle", "manifest", "skill"]],
@@ -564,7 +585,7 @@ const TOPIC_KEYWORDS = [
 	["writing", ["写作", "内容", "文案", "小红书", "公众号", "创作"]],
 	["ops", ["部署", "发布", "push", "restart", "配置", "vercel", "cloudflare", "aliyun"]]
 ];
-const TOOL_TASK_RE = [
+const TOOL_TASK_RE: Array<[string, string[]]> = [
 	["dev", ["bash", "npm", "git", "write", "edit", "read", "grep", "glob", "workflow", "subagent"]],
 	["research", ["web_search", "weread", "mnemon", "cubox", "skillmgr"]],
 	["io", ["flomo", "notion", "ticktick", "zsxq", "feishu", "wps"]],
@@ -648,13 +669,13 @@ export function buildProfile(records) {
 	};
 }
 
-function normalizeVec(counts) {
+function normalizeVec(counts: Record<string, number>): Record<string, number> {
 	const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-	const out = {};
+	const out: Record<string, number> = {};
 	for (const k of Object.keys(counts)) out[k] = counts[k] / total;
 	return out;
 }
-function topKeys(vec, n) {
+function topKeys(vec: Record<string, number>, n: number) {
 	return Object.entries(vec)
 		.sort((a, b) => b[1] - a[1])
 		.slice(0, n)
@@ -745,7 +766,7 @@ function inferTasks(desc) {
 // Infer the tools a skill likely uses from its description, so the tool
 // dimension can reward genuine overlap instead of always being 0 for entries
 // that have no explicit tool list (e.g. table-parsed skill catalogs).
-const TOOL_KEYWORDS = [
+const TOOL_KEYWORDS: Array<[string, string[]]> = [
 	["git", ["git", "commit", "branch", "pr", "pull request", "repo", "github", "push"]],
 	["bash", ["bash", "shell", "cli", "command", "terminal", "脚本", "terminal"]],
 	["npm", ["npm", "node", "package", "install", "publish", "依赖", "tsdown", "build"]],
@@ -846,7 +867,7 @@ function parseAwesomeMd(md, sourceId, kind) {
 	return out;
 }
 
-async function fetchCatalog(c, { force = false, onProgress } = {}) {
+async function fetchCatalog(c, { force = false, onProgress }: FetchOptions = {}) {
 	// GitHub-全网 discovery: search the whole of GitHub for agent-skill repos.
 	if (c.sourceType === "github") {
 		return fetchGithubSkills(c, { force, onProgress });
@@ -896,7 +917,7 @@ const GITHUB_SKILL_QUERIES = [
 	"awesome skills",
 	"deepseek harness dsh"
 ];
-async function fetchGithubSkills(c, { force = false, onProgress } = {}) {
+async function fetchGithubSkills(c, { force = false, onProgress }: FetchOptions = {}) {
 	const cacheFile = join(cacheDir(), "catalog-" + c.id + ".json");
 	if (!force) {
 		try {
@@ -966,7 +987,7 @@ const SEED = [
 	{ name: "using-git-worktrees", description: "用 git worktree 隔离功能开发", tags: ["dev", "dev"], tools: ["git", "bash"], taskTypes: ["dev"], url: "https://github.com/obra/superpowers" }
 ];
 
-export async function loadRegistry(cfg, { localSkills = [], forceRefresh = false, onProgress } = {}) {
+export async function loadRegistry(cfg, { localSkills = [], forceRefresh = false, onProgress }: LoadRegistryOptions = {}) {
 	const byKey = new Map();
 	const add = (s) => {
 		if (!s || !s.name) return;

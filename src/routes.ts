@@ -5,6 +5,7 @@
  * (127.0.0.1/localhost, same-origin) — the settings panel is the sole consumer.
  */
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import type { WebRoute } from '@deepseek-ai/dsh-host-webserver'
 import type { RecommenderStore } from './recommend.ts'
 import { runScan, recommend, buildProfile, scanSessions, getScanProgress, setCachedResult, getCachedResult } from './recommend.ts'
 
@@ -83,7 +84,7 @@ export interface RouteContext {
 }
 
 /** Build every /api/dsh-skill-recommender route (exact paths). */
-export function makeRoutes(deps: RouteContext) {
+export function makeRoutes(deps: RouteContext): WebRoute[] {
 	const { store } = deps
 
 	const guard = (req: IncomingMessage, res: ServerResponse, method: string): boolean => {

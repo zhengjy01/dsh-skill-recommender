@@ -7,7 +7,8 @@
  * never thrown — an external plugin must not take the GUI down.
  */
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import { RecommenderPanel } from './RecommenderPanel.tsx'
 
 /** Required services. */

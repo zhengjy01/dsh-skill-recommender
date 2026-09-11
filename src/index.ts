@@ -9,6 +9,7 @@
  * weights, catalog toggles) via the /api/dsh-skill-recommender/* route family.
  */
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/cordis-plugin-timer'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import { defineTool } from '@deepseek-ai/dsh-tools'
@@ -159,12 +160,15 @@ export function apply(ctx: Context, config?: Config): void {
 				render: (_args, value) => text(String(value.message ?? ''))
 			},
 			async execute(args) {
+				// Read the reset intent from the request: `patch()` folds it into the
+				// stored config, so the returned view never carries the flag itself.
+				const wantReset = (args as { reset?: boolean } | undefined)?.reset === true
 				const view = await store.patch((args as object) ?? {})
 				return {
 					ok: true,
 					message: '配置已保存：指数 ' + view.index + ' · 权重 ' + JSON.stringify(view.weights) + ' · 来源 ' + (view.sources as string[]).join('/') +
 						' · 目录 ' + (view.catalogs as string[]).join(',') + ' · 窗口 ' + view.windowDays + ' 天' +
-						(view.reset ? '（已重置默认）' : '')
+						(wantReset ? '（已重置默认）' : '')
 				}
 			}
 		}),
