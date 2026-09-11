@@ -1,6 +1,6 @@
 {
   "name": "dsh-skill-recommender",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Skill recommender for DeepSeek Harness: browse local Codex/Claude/DSH session records, derive a user profile, and recommend suitable open-source skills with a tunable weighted match index (higher index = higher-relevance only). Tools + Web settings panel.",
   "type": "module",
   "main": "lib/index.js",
