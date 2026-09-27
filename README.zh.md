@@ -31,13 +31,61 @@
 
 要求 **DeepSeek Harness ≥ 0.1.5-rc.1**（已在包清单的 `dsh.engines.dsh` 中声明，DSH 插件市场据此显示兼容版本），并已在 **0.1.5-rc.1** 上实测通过。本构建包含 DSH 0.1.5 的适配：工具结果的严格校验契约（lossless-JSON 快照、`additionalProperties: false` 的 schema 校验、`output.render` 必须返回 `ContentBlock[]`），以及不依赖宿主 PATH 的可执行文件解析（launchd 托管的宿主 `PATH` 只有 `/usr/bin:/bin`）。
 
-## 安装（开发）
+## 安装
 
-```bash
-dsh plugin add --profile web link:/path/to/dsh-skill-recommender
-```
+1. 把插件装进你的 profile：
 
-随后重启宿主（工具与路由生效）、浏览器强刷（客户端面板生效）。配置键：patch 层的 `skill-recommender`。
+   ```bash
+   # 从 npm 安装
+   dsh plugin --profile web add dsh-skill-recommender
+
+   # 或从 GitHub 安装（仓库带 dsh-plugin topic）
+   dsh plugin --profile web add github:zhengjy01/dsh-skill-recommender
+
+   # 本地开发
+   dsh plugin --profile web add link:/path/to/dsh-skill-recommender
+   ```
+
+   **预期结果**：命令打印解析到的包名，并写进该 profile 的 `dsh.profile.bundles`。
+
+   > **截图位 1 —— 安装输出。** 怎么截：命令执行完立刻截终端最后约 10 行（包名 +
+   > profile）。要不要打码：出现用户名 / 家目录就打码。文件名建议
+   > `docs/images/dsh-skill-recommender-1-install.png`。
+
+2. 重启宿主（工具与路由生效），再强刷浏览器页面（客户端面板生效）。配置键：patch
+   层的 `skill-recommender`。
+
+   **预期结果**：**设置** 页出现「**Skill 推荐器**」卡片。
+
+   > **截图位 2 —— 设置卡片。** 怎么截：卡片首屏（扫描按钮 + 匹配指数滑条）。
+   > 要不要打码：私密的目录名打码。文件名建议
+   > `docs/images/dsh-skill-recommender-2-card.png`。
+
+3. 点 **扫描**。
+
+   **预期结果**：进度条推进，随后出现带分数、分项与可点击来源链接的推荐卡。
+
+   > **截图位 3 —— 带分数的推荐结果。** 怎么截：结果列表，2–3 张卡即可。文件名建议
+   > `docs/images/dsh-skill-recommender-3-results.png`。
+
+4. 可选：把 **匹配指数** 滑条拉高后重新扫描。
+
+   **预期结果**：推荐更少、关联度更高（指数 90 通常只剩很少几条）。
+
+   > **截图位 4 —— 指数闸门生效。** 怎么截：拉高指数前后各一张列表。文件名建议
+   > `docs/images/dsh-skill-recommender-4-index.png`。
+
+### 补图清单
+
+| # | 放在哪 | 展示什么 | 怎么截 | 建议文件名 |
+| --- | --- | --- | --- | --- |
+| 1 | 安装 | 安装命令输出（包名 + profile） | 第 1 步后立刻截终端最后约 10 行；家目录打码 | `docs/images/dsh-skill-recommender-1-install.png` |
+| 2 | 安装 | 设置页的「Skill 推荐器」卡片 | 设置页，卡片标题 + 扫描按钮 | `docs/images/dsh-skill-recommender-2-card.png` |
+| 3 | 使用 | 带分数的推荐卡 | 结果列表，2–3 张 | `docs/images/dsh-skill-recommender-3-results.png` |
+| 4 | 使用 | 拉高匹配指数后列表变短 | 同一列表，拉高指数前后 | `docs/images/dsh-skill-recommender-4-index.png` |
+
+补图后请重跑 `npm pack --dry-run` 与可移植性门禁（`npm run verify`）——README 属于
+发布物。
 
 ## 构建
 

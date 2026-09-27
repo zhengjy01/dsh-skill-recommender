@@ -31,13 +31,55 @@ A **Skill 推荐器** card in the Web settings page: scan button, live **匹配�
 
 Requires **DeepSeek Harness ≥ 0.1.5-rc.1** (declared as `dsh.engines.dsh` in the package manifest, so the DSH plugin marketplace can report it) and is verified against **0.1.5-rc.1**. This build carries the DSH 0.1.5 adaptations: the strict tool-result contract (lossless-JSON snapshot, `additionalProperties: false` schema validation, and `output.render` returning `ContentBlock[]`) plus executable resolution that survives a launchd-started host whose `PATH` is only `/usr/bin:/bin`.
 
-## Install (development)
+## Install
 
-```bash
-dsh plugin add --profile web link:/path/to/dsh-skill-recommender
-```
+1. Add the plugin to your profile:
 
-Then restart the host (tools + routes) and hard-refresh the browser (client panel). Config key: `skill-recommender` in the bundle patch layer.
+   ```bash
+   # from npm
+   dsh plugin --profile web add dsh-skill-recommender
+
+   # or from GitHub (the repo carries the `dsh-plugin` topic)
+   dsh plugin --profile web add github:zhengjy01/dsh-skill-recommender
+
+   # local development
+   dsh plugin --profile web add link:/path/to/dsh-skill-recommender
+   ```
+
+   Expected: the command prints the resolved package and records it in that
+   profile's `dsh.profile.bundles`.
+
+   > **Screenshot slot 1 — install output.** Capture the terminal right after the
+   > command, last ~10 lines (package + profile). Redact your username / home
+   > path. Save as `docs/images/dsh-skill-recommender-1-install.png`, then replace
+   > this block with `![Install output](docs/images/dsh-skill-recommender-1-install.png)`.
+
+2. Restart the host (tools + routes), then hard-refresh the browser page (client
+   panel). Config key: `skill-recommender` in the bundle patch layer.
+
+   Expected: **设置 (Settings)** shows the **Skill 推荐器** card.
+
+   > **Screenshot slot 2 — the settings card.** Capture the card's first screen
+   > (scan button + index slider). Redact any catalog names you consider private.
+   > Save as `docs/images/dsh-skill-recommender-2-card.png`.
+
+3. Press **扫描 / Scan**.
+
+   Expected: the progress bar advances, then recommendation cards appear with a
+   score, the per-dimension breakdown, and a clickable source link.
+
+   > **Screenshot slot 3 — recommendations with scores.** Capture the result list
+   > (2–3 cards are enough). Save as
+   > `docs/images/dsh-skill-recommender-3-results.png`.
+
+4. Optional: drag the **匹配指数 / index** slider up and re-scan.
+
+   Expected: fewer, higher-relevance recommendations (index `90` typically
+   returns very few).
+
+   > **Screenshot slot 4 — the index gate works.** Capture the list before/after
+   > raising the index. Save as
+   > `docs/images/dsh-skill-recommender-4-index.png`.
 
 ## Build
 
@@ -60,15 +102,16 @@ node tests/smoke.mjs
 
 MIT
 
-## 安装 / Install
+## Screenshots to add / 补图清单
 
-```sh
-# from npm (published package)
-dsh plugin --profile web add dsh-skill-recommender
+| # | Where / 放在哪 | What it shows / 展示什么 | How to capture / 怎么截 | Suggested filename / 建议文件名 |
+| --- | --- | --- | --- | --- |
+| 1 | Install | The install command's output (package + profile) | Terminal right after step 1, last ~10 lines; redact home path | `docs/images/dsh-skill-recommender-1-install.png` |
+| 2 | Install | The **Skill 推荐器** card in Settings | Settings page, card header + scan button | `docs/images/dsh-skill-recommender-2-card.png` |
+| 3 | Usage | Recommendation cards with scores | Result list, 2–3 cards | `docs/images/dsh-skill-recommender-3-results.png` |
+| 4 | Usage | Raising the index narrows the list | Same list before/after raising the index | `docs/images/dsh-skill-recommender-4-index.png` |
 
-# or local development
-dsh plugin --profile web add link:/path/to/dsh-skill-recommender
-
-# then restart dsh web to activate
-```
+After adding the images, re-run `npm pack --dry-run` and the portability gate
+(`npm run verify`) — the README is part of the published tarball.
+补图后请重跑 `npm pack --dry-run` 与可移植性门禁（`npm run verify`）。
 
