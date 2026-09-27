@@ -88,6 +88,11 @@
     "bundle": "tsdown",
     "watch": "tsdown --watch",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/smoke.mjs"
+    "test": "node tests/smoke.mjs",
+    "verify": "node scripts/portability.mjs --health /api/dsh-skill-recommender/status",
+    "verify:full": "node scripts/portability.mjs --health /api/dsh-skill-recommender/status --stability 30",
+    "verify:quick": "node scripts/portability.mjs --skip-audit --stability 5 --health /api/dsh-skill-recommender/status",
+    "release": "node scripts/release.mjs",
+    "release:check": "node scripts/release.mjs --check"
   }
 }
