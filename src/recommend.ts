@@ -24,18 +24,27 @@ const execFileAsync = promisify(execFile);
 // Paths
 // ---------------------------------------------------------------------------
 
-export const DEFAULT_CONFIG_FILE = join(homedir(), ".dsh", "dsh-skill-recommender", "config.json");
-export const DEFAULT_CACHE_DIR = join(homedir(), ".dsh", "dsh-skill-recommender", "cache");
+/**
+ * The DSH config root. Honours `DSH_HOME` so a relocated home is written where the
+ * host reads it — hardcoding `~/.dsh` writes to the wrong place on such machines.
+ */
+const DSH_HOME = process.env.DSH_HOME || join(homedir(), ".dsh");
+
+export const DEFAULT_CONFIG_FILE = join(DSH_HOME, "dsh-skill-recommender", "config.json");
+export const DEFAULT_CACHE_DIR = join(DSH_HOME, "dsh-skill-recommender", "cache");
 export const SESSION_ROOTS = {
-	dsh: join(homedir(), ".dsh", "sessions"),
+	dsh: join(DSH_HOME, "sessions"),
 	codex: join(homedir(), ".codex"),
 	claude: join(homedir(), ".claude", "projects")
 };
 
 const LOCAL_SKILL_DIRS = () => [
 	join(homedir(), ".agents", "skills"),
-	join(homedir(), ".dsh", "skills"),
-	"/Users/zhengjunyao/Documents/Obsidian Vault/2️⃣ AI/Skill"
+	join(DSH_HOME, "skills"),
+	// Personal Obsidian skill library. Home-relative + env-overridable: a machine
+	// specific absolute path here breaks (or silently mis-scans) every other install.
+	process.env.DSH_SKILL_CATALOG_DIR
+		|| join(homedir(), "Documents", "Obsidian Vault", "2️⃣ AI", "Skill")
 ];
 
 // Remote open-source skill catalogs. `kind` classifies each catalog so the
@@ -304,19 +313,32 @@ interface LoadRegistryOptions {
 }
 
 // --- DSH -------------------------------------------------------------------
+/**
+ * Canonical session-log names across DSH generations: `session.jsonl[.zstd]` (v0),
+ * `session.v3.jsonl.zstd`, `session.v4.jsonl.zstd`, … Mirrors the core's
+ * `CANONICAL_LOG_FILENAME` (`/^session(?:\.v([1-9][0-9]*))?\.jsonl$/`) plus the
+ * optional `.zstd` suffix. Matching the versioned names matters: the current
+ * writer emits `session.v3.jsonl.zstd` / `session.v4.jsonl.zstd`, so a literal
+ * `session.jsonl.zstd` predicate silently skips every modern session.
+ */
+export const SESSION_LOG_NAME = /^session(?:\.v([1-9][0-9]*))?\.jsonl(\.zstd)?$/;
+
 async function readDsh(file: string): Promise<SessionRecord> {
 	// Absolute zstd + widened PATH: a launchd-started DSH has only
 	// /usr/bin:/bin, where zstd is absent — every session would be skipped
-	// silently by the per-file catch below.
-	const { stdout } = await execFileAsync(resolveExecutable("zstd"), ["-d", "-c", file], {
-		maxBuffer: 512 * 1024 * 1024,
-		env: childEnv(),
-	});
+	// silently by the per-file catch below. Plain `.jsonl` generations are
+	// read directly instead of being piped through zstd.
+	const text = file.endsWith(".zstd")
+		? (await execFileAsync(resolveExecutable("zstd"), ["-d", "-c", file], {
+			maxBuffer: 512 * 1024 * 1024,
+			env: childEnv(),
+		})).stdout
+		: await readFile(file, "utf8");
 	const rec = emptyRecord("dsh");
 	const userMsgs = [];
 	const assistantMsgs = [];
 	const toolNames = [];
-	for (const line of stdout.split("\n")) {
+	for (const line of text.split("\n")) {
 		if (!line) continue;
 		let o;
 		try {
@@ -485,7 +507,7 @@ async function collectForSource(source, cutoff, max) {
 	const candidates = [];
 	if (source === "dsh") {
 		const files = [];
-		await walk(SESSION_ROOTS.dsh, (n) => n === "session.jsonl.zstd", files);
+		await walk(SESSION_ROOTS.dsh, (n) => SESSION_LOG_NAME.test(n), files);
 		for (const f of files) {
 			let st;
 			try {
