@@ -6,6 +6,29 @@
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-09-27
+
+### 修复 (Fixed)
+
+- fix(session-scan): DSH 会话日志判据覆盖 v3/v4，裸 .jsonl 直读
+- fix(build): 修复 44 处 tsc 类型错误并完成 0.1.5-rc.1 对齐
+- fix(0.1.5): render must return ContentBlock[]; resolve zstd via extended PATH
+
+### 其它 (Changed)
+
+- chore(release): 新增 CHANGELOG（回填 0.1.0–0.1.3）并纳入发布物
+- chore(verify): 接入可移植性验证与统一发布脚本
+- chore(release): 0.1.3 — ship the tsc type fixes (44 errors → 0) + 0.1.5-rc.1 dep alignment
+- chore(release): 0.1.2 — declare DSH 0.1.5 compatibility in peer range (drop retired dsh-client-runtime / dsh-client-ui-slots peers)
+- chore(release): 0.1.1 — declare DSH compatibility (dsh.engines.dsh >=0.1.5-rc.1) + README compatibility section
+- docs: document npm install command alongside local link install
+
+### 兼容性 (Compatibility)
+
+- DSH：`>=0.1.5-rc.1`
+- Node：`^22.19.0 || >=24.0.0`
+- DSH peer：^0.1.0-rc.6 || ^0.1.1-rc.1 || ^0.1.2-alpha.1 || ^0.1.5-rc.1
+
 <!-- 日常提交的内容会累积到这里；发布时脚本会在本行下方插入新版本段落 -->
 
 ## [0.1.3] - 2026-09-11
